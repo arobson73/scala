@@ -21,6 +21,10 @@ lazy val root = (project in file(".")).
   resolvers := oracleResolvers,
   libraryDependencies ++= commonDeps 
  )
+//needed since seems like an issue with sbt run and loading a wav file
+//so this will spawn a seprate jvm. one for sbt the other for the 
+//running program. (I think)
+fork in run := true
 
 //lazy val foo = (project in file("Foo"))  
 //lazy val bar = (project in file("Bar"))
