@@ -34,9 +34,8 @@ object TestMain {
     }
   }
 
-  def mazeChecker: Unit = {
-   val maze = new Maze 
-   val result = maze.breadthFirstShortestPath
+  def mazeChecker: Unit = { 
+   val result = Maze.breadthFirstShortestPath
    result.get.map(println(_))
   }
 
