@@ -1,8 +1,9 @@
-:paste
+//:paste
 trait RNG {
   def nextInt: (Int, RNG) // Should generate a random `Int`. We'll later define other functions in terms of `nextInt`.
 }
 //RNG.Simple(33).nextInt
+//also i think this nextInt is seems biased to large numbers
 object RNG {
   // NB - this was called SimpleRNG in the book text
   case class Simple(seed: Long) extends RNG {
@@ -144,6 +145,9 @@ import State._
 //if you wonder why map uses unit method (which usually create a type [Nothing,Int]
 //when run like unit(4) for example. but since flatMap is defined as State[S,B]
 //then the state type will be S.
+//more useful State example 
+//def f(rng:RNG):(Int,RNG) = rng.nextInt
+//State(f).run(Simple(1))
 case class State[S,+A](run: S => (A, S)) {
   //State((x:Int) => (10,x+1)).map(_*10).run(1) 
   def map[B](f: A => B): State[S, B] =
