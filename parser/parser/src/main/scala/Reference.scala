@@ -1,7 +1,9 @@
 import ReferenceTypes._
 //import scala.language.experimental.macros
 import scala.util.matching.Regex
-import com.typesafe.scalalogging.LazyLogging
+//to use these do logger.debug("something")
+//note using LazyLogging seems to stop me from import class file into REPL
+//import com.typesafe.scalalogging.LazyLogging
 import macrologgers.{SimpleMacroLogger => RefLogger}
 object ReferenceTypes {
 
@@ -12,17 +14,19 @@ object ReferenceTypes {
     * in `Sliceable.scala` add an `isSliced` `Boolean` flag
     * to `ParseState`.
     */
-  case class ParseState(loc: Location) {
+  //case class ParseState(loc: Location) extends LazyLogging {
+    case class ParseState(loc: Location)  {
     def advanceBy(numChars: Int): ParseState =
     {
-       //Macros.hello
-     // SimpleMacroLogger.info("PS: advance by " + numChars)
-       // hello
-      RefLogger.info("PS:advance by " + numChars)
+      RefLogger.info("PS:advanceBy " + numChars)
       copy(loc = loc.copy(offset = loc.offset + numChars))
     }
     def input: String = loc.input.substring(loc.offset)
-    def slice(n: Int) = loc.input.substring(loc.offset, loc.offset + n)
+    def slice(n: Int) = {
+      val s = loc.input.substring(loc.offset, loc.offset + n)
+      RefLogger.info("PS:slice " + s)
+      s
+    }
   }
 
   /* Likewise, we define a few helper functions on `Result`. */
@@ -59,9 +63,11 @@ object ReferenceTypes {
     * longer than s1, returns s1.length. */
   def firstNonmatchingIndex(s1: String, s2: String, offset: Int): Int = {
    // logger.debug(s"FNMI: s1 = $s1, s2 = $s2, offset = $offset")
-    if(offset >= s1.length ) return 0
+    RefLogger.info(s"FNMI: s1 = $s1, s2 = $s2, offset = $offset")
+  //  if(offset >= s1.length ) return 0
     var i = 0
     while (i < s1.length && i < s2.length) {
+      if((offset + i) >= s1.length) return  i
       if (s1.charAt(i+offset) != s2.charAt(i)) return i
       i += 1
     }
@@ -70,49 +76,65 @@ object ReferenceTypes {
   }
 }
 
-object Reference extends Parsers[Parser] with LazyLogging {
+//object Reference extends Parsers[Parser] with LazyLogging {
+  object Reference extends Parsers[Parser] {
 
   def run[A](p: Parser[A])(s: String): Either[ParseError,A] = {
     val s0 = ParseState(Location(s))
-    logger.debug("run: after Parse State")
-    logger.debug("Ths is very good")
+    RefLogger.info("Ref:run: after Parse State")
+    //logger.debug("run: after Parse State")
     p(s0).extract
   }
-
+  //just for debuggin - allow offset to be passed in
+  def runo[A](p: Parser[A])(s: String, off: Int): Either[ParseError,A] = {
+    val s0 = ParseState(Location(s,off))
+    RefLogger.info("Ref:runo: after Parse State")
+    //logger.debug("run: after Parse State")
+    p(s0).extract
+  }
   // consume no characters and succeed with the given value
   def succeed[A](a: A): Parser[A] = s => Success(a, 0)
-
+  //note this logic seems to match the book description.
+  //that is , if commited, then don't evaluate the rhs side of the OR
   def or[A](p: Parser[A], p2: => Parser[A]): Parser[A] =
     s => p(s) match {
-      case Failure(e,false) => p2(s)
-      case r => r // committed failure or success skips running `p2`
+      case Failure(e,false) =>
+        {
+          RefLogger.info("Ref:or:failed first or, try next parser")
+          p2(s)
+        }
+      case r =>
+        {
+          RefLogger.info("Ref:or:not fail")
+          r
+        } // committed failure or success skips running `p2`
     }
 
   def flatMap[A,B](f: Parser[A])(g: A => Parser[B]): Parser[B] = {
     s =>
       f(s) match {
-        case Success(a, n) => { logger.debug(s"FM: Success $a $n")
-          //val mv = if(s.loc.input.length == 1) 0 else n
-         // if(s.loc.input.length == 1) g(a)(s).addCommit(n != 0).advanceSuccess(n) else {
+        case Success(a, n) => {
+          RefLogger.info(s"FM: Success $a $n")
           g(a)(s.advanceBy(n))
           .addCommit(n != 0)
           .advanceSuccess(n)}
-
         case f@Failure(_, _) => f
       }
   }
   def string(w: String): Parser[String] = {
     val msg = "'" + w + "'"
-    logger.debug("string: " + msg)
+    RefLogger.info("string: " + msg)
     s => {
       val i = firstNonmatchingIndex(s.loc.input, w, s.loc.offset)
       if (i == -1) {
         // they matched
-        logger.debug("string:str match")
+      //  logger.debug("string:str match")
+        RefLogger.info("string:str match")
         Success(w, w.length)
       }
       else {
-        logger.debug("string: str fail")
+        //logger.debug("string: str fail")
+        RefLogger.info(s"string: str fail i = $i, msg = $msg")
         Failure(s.loc.advanceBy(i).toError(msg), i != 0)
       }
     }
@@ -139,10 +161,13 @@ object Reference extends Parsers[Parser] with LazyLogging {
 
   def attempt[A](p: Parser[A]): Parser[A] =
     s => p(s).uncommit
-
+  //just slices input string to matcher length
   def slice[A](p: Parser[A]): Parser[String] =
     s => p(s) match {
-      case Success(_,n) => Success(s.slice(n),n)
+      case Success(_,n) => {
+        RefLogger.info("slice: n =" + n)
+        Success(s.slice(n),n)
+      }
       case f@Failure(_,_) => f
     }
 
@@ -154,31 +179,32 @@ object Reference extends Parsers[Parser] with LazyLogging {
     s => {
       var nConsumed: Int = 0
       val buf = new collection.mutable.ListBuffer[A]
-      logger.debug("OVMany: ")
+      RefLogger.info("OVMany: ")
       def go(p: Parser[A], offset: Int): Result[List[A]] = {
         val nx = s.advanceBy(offset)
-        logger.debug("OVMany: use it")
+        RefLogger.info("OVMany: use it")
         val c = nx.loc.col
         val o = nx.loc.offset
-        logger.debug(s"OVMany: col=$c, offsett = $o")
+       // logger.debug(s"OVMany: col=$c, offsett = $o")
+         RefLogger.info(s"OVMany: col=$c, offsett = $o")
         p(nx) match {
           case Success(a,n) =>
           {
-            logger.debug(s"OVMany:Success $a , $n")
+            RefLogger.info(s"OVMany:Success $a , $n")
             buf += a;
-            logger.debug("OVMany: buf = " + buf)
-            logger.debug("OVMany: string here " + s.input)
+            RefLogger.info("OVMany: buf = " + buf)
+            RefLogger.info("OVMany: string here " + s.input)
            // if ((offset + n) >= s.input.length) Success(buf.toList,offset) else go(p, offset+n)
             go(p,offset+n)
           }
           case f@Failure(e,true) =>
           {
-            logger.debug("OVMany: Fail , true")
+            RefLogger.info("OVMany: Fail , true")
             f
           }
           case Failure(e,_) =>
           {
-            logger.debug("OVMany: Fail , false")
+            RefLogger.info("OVMany: Fail , false")
             Success(buf.toList,offset)
           }
         }
