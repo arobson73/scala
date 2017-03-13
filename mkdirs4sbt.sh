@@ -83,3 +83,9 @@ object Dependencies {
   val scalatest = "org.scalatest" %% "scalatest" % "3.0.1"
 }' > project/Dependencies.scala
 
+echo 'object TestApp {
+    def main(args: Array[String]): Unit = {
+
+`}
+}' > src/main/scala/app.scala
+
