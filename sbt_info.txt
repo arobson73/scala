@@ -1,0 +1,2 @@
+//To run a main program with arguments and send output to log file
+sbt "runMain code.AsyncBoundaries" > res.txt
