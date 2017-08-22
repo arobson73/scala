@@ -2,3 +2,5 @@
 sbt "runMain code.AsyncBoundaries" > res.txt
 //Run specific test in sbt (this will run test with the string "manage" 
 testOnly *PerfRoutingTest -- -z manage
+//Run specifc test in sbt and pipe result to file res.txt
+sbt "testOnly -- -z \"survive killed routee\"" > res.txt
