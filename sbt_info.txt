@@ -1,2 +1,4 @@
 //To run a main program with arguments and send output to log file
 sbt "runMain code.AsyncBoundaries" > res.txt
+//Run specific test in sbt (this will run test with the string "manage" 
+testOnly *PerfRoutingTest -- -z manage
