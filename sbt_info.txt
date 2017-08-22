@@ -6,3 +6,5 @@ testOnly *PerfRoutingTest -- -z manage
 sbt "testOnly -- -z \"survive killed routee\"" > res.txt
 //similar to above but also specifies the class (in case there are multiple classes)
 sbt "testOnly *PerfRoutingTest -- -z \"use manage routees1\"" > res.txt
+//sometimes you might get weird characters since sbt uses ascii control colors. do this to disable
+sbt -no-colors "testOnly *PerfRoutingTest -- -z \"manage routees1\"" > res.txt
