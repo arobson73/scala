@@ -2,6 +2,8 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Node
 import org.jsoup.select.NodeVisitor
 //note there is a better way below to implement the java interface in scala
+//in general a complicated api like jsoup, best to look at jsoup source code
+//to fully understand
 class MyVisitor(var childList:List[String]) extends NodeVisitor {
   override def head(node:Node, depth:Int): Unit = {
     if (node.childNodeSize() == 0) {
