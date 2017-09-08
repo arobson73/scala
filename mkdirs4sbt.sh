@@ -1,3 +1,4 @@
+
 #!/bin/sh
 mkdir -p src/{main,test}/{java,resources,scala}
 mkdir lib project target
@@ -21,7 +22,7 @@ lazy val root = (project in file(".")).
   //dependsOn(foo,bar).
   settings(buildSettings: _*).
  settings(
-  mainClass in assembly := Some("com.andyr.TestApp"),
+ mainClass in assembly := Some("com.andyr.TestApp"),
   resolvers := oracleResolvers,
   libraryDependencies ++= commonDeps 
  )
@@ -74,9 +75,9 @@ object Dependencies {
   val scalatest = "org.scalatest" %% "scalatest" % "3.0.1"
 }' > project/Dependencies.scala
 
-echo '
-package com.andyr
+echo 'package com.andyr
 object TestApp {
     def main(args: Array[String]): Unit = {
+    println("Hello")
 }
 }' > src/main/scala/app.scala
