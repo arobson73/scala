@@ -1,0 +1,8 @@
+//Note if i want ammonite REPL to display characters like this 
+"The quick brown 狐 jumped over the lazy 犬"
+
+then:
+replace the 'repl.pprinter()and add in a handler forString` that prints things with less/no escaping
+you want a new additionalHandlers
+go jump around the signatures and you should be able to figure out how to do it
+repl.pprinter() = repl.pprinter().copy(additionalHandlers = ...)
