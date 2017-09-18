@@ -6,3 +6,7 @@ replace the 'repl.pprinter()and add in a handler forString` that prints things w
 you want a new additionalHandlers
 go jump around the signatures and you should be able to figure out how to do it
 repl.pprinter() = repl.pprinter().copy(additionalHandlers = ...)
+
+//importing
+
+import $ivy.`com.typesafe.akka:akka-stream_2.12:2.5.4`
