@@ -1,0 +1,5 @@
+Typesafe Stack (Scala, SBT, Play!, Akka)
+Finagle, Unfiltered
+Kafka, MySql, Aerospike, Vertica, Redis, Cassandra, Zookeeper
+Hadoop, Scalding, Spark
+Mesos, Marathon, Docker
